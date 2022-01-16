@@ -12,7 +12,7 @@ function onMessage(this: WebSocket, message: RawData) {
   for (const client of clients) {
     if (client !== this && client.readyState === WebSocket.OPEN) {
       client.send(message, (err) => {
-        console.error('Message send error', err)
+        if (err !== null) console.error('Message send error', err)
       })
     }
   }
