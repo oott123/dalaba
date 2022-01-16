@@ -4,7 +4,8 @@ const wsServer = new WebSocketServer({ port: Number(process.env.PORT) || 8080 })
 const connections = new Map<string, WebSocket[]>()
 
 function onMessage(this: WebSocket, message: RawData) {
-  const clients = connections.get(this.url)
+  const url = (this as any).requestUrl
+  const clients = connections.get(url)
   if (!clients) {
     return
   }
@@ -12,14 +13,15 @@ function onMessage(this: WebSocket, message: RawData) {
   for (const client of clients) {
     if (client !== this && client.readyState === WebSocket.OPEN) {
       client.send(message, (err) => {
-        if (err !== null) console.error('Message send error', err)
+        if (err) console.error('Message send error', err)
       })
     }
   }
 }
 
 function onClose(this: WebSocket) {
-  const clients = connections.get(this.url)
+  const url = (this as any).requestUrl
+  const clients = connections.get(url)
   if (!clients) {
     return
   }
@@ -29,7 +31,7 @@ function onClose(this: WebSocket) {
     clients.splice(index, 1)
   }
   if (clients.length < 1) {
-    connections.delete(this.url)
+    connections.delete(url)
   }
 }
 
@@ -37,8 +39,8 @@ function onPing(this: WebSocket) {
   this.pong()
 }
 
-wsServer.on('connection', (ws) => {
-  const url = ws.url
+wsServer.on('connection', (ws, request) => {
+  const url = ((ws as any).requestUrl = request.url!)
   if (connections.has(url)) {
     connections.get(url)!.push(ws)
   } else {
