@@ -52,3 +52,5 @@ wsServer.on('connection', (ws, request) => {
   ws.on('error', onClose)
   ws.on('ping', onPing)
 })
+
+console.log(`listening on port ${wsServer.options.port || 8080}`)
